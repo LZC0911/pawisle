@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>绒屿 PAWISLE · 宠物健康档案与兴趣圈层</title>
+<style>
+/* ============ 设计契约 Tokens ============ */
+:root{
+  --primary:#1E4D3B; --primary-hover:#153728; --accent:#C07A2E;
+  --bg:#F6F3EC; --surface:#FFFFFF; --surface-2:#FBF9F4; --border:#E6E0D2;
+  --text:#1F2A24; --text-sub:#6E7B72;
+  --success:#2E7D5B; --warning:#C08A2D; --danger:#BF4A3C;
+  --font-display:Georgia,"Times New Roman","Songti SC","STSong","SimSun",serif;
+  --font-body:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  --r-sm:8px; --r-md:12px; --r-lg:18px;
+  --sh-sm:0 1px 2px rgba(31,42,36,.05);
+  --sh-md:0 6px 20px rgba(31,42,36,.07);
+  --sh-lg:0 16px 48px rgba(31,42,36,.12);
+  --topbar:64px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);color:var(--text);background:var(--bg);
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  min-height:100vh;position:relative;
+}
+/* 背景质感：暖米白 + 径向 mesh + 颗粒 */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(700px 480px at 8% -6%, rgba(30,77,59,.10), transparent 60%),
+    radial-gradient(640px 520px at 96% 12%, rgba(192,122,46,.08), transparent 60%),
+    radial-gradient(800px 600px at 50% 108%, rgba(30,77,59,.06), transparent 60%),
+    var(--bg);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.035'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::selection{background:rgba(30,77,59,.18)}
+h1,h2,h3,.serif{font-family:var(--font-display);font-weight:600;letter-spacing:.01em}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+/* ============ 基础组件 ============ */
+.kicker{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--text-sub);font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--r-sm);
+  font-weight:600;font-size:14px;transition:all .22s ease;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-md{height:40px;padding:0 18px}
+.btn-sm{height:32px;padding:0 12px;font-size:13px}
+.btn-lg{height:48px;padding:0 26px;font-size:15px}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--sh-sm)}
+.btn-primary:hover:not(:disabled){background:var(--primary-hover);transform:translateY(-2px);box-shadow:var(--sh-md)}
+.btn-ghost{border:1px solid var(--border);background:var(--surface)}
+.btn-ghost:hover:not(:disabled){border-color:var(--primary);color:var(--primary);transform:translateY(-2px)}
+.btn-gold{background:var(--accent);color:#fff;box-shadow:var(--sh-sm)}
+.btn-gold:hover:not(:disabled){background:#A96B25;transform:translateY(-2px);box-shadow:var(--sh-md)}
+.btn-danger-ghost{border:1px solid rgba(191,74,60,.4);color:var(--danger);background:transparent}
+.btn-danger-ghost:hover:not(:disabled){background:rgba(191,74,60,.06)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-sm);
+  transition:box-shadow .22s ease,transform .22s ease}
+.card.hoverable:hover{box-shadow:var(--sh-md);transform:translateY(-2px)}
+.chip{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 14px;border-radius:999px;
+  background:var(--surface-2);border:1px solid var(--border);font-size:13px;color:var(--text-sub);
+  transition:all .2s ease;cursor:pointer}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:13px;font-weight:600}
+.field input,.field select,.field textarea{
+  height:40px;padding:0 12px;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--surface);outline:none;transition:all .2s ease;width:100%}
+.field textarea{height:auto;padding:10px 12px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,77,59,.12)}
+.field.err input,.field.err select,.field.err textarea{border-color:var(--danger)}
+.field .err-msg{font-size:12px;color:var(--danger);display:none}
+.field.err .err-msg{display:block}
+/* ============ App Shell ============ */
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar);z-index:100;
+  background:rgba(246,243,236,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border)}
+.topbar-inner{max-width:1180px;margin:0 auto;height:100%;padding:0 24px;
+  display:flex;align-items:center;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-logo{width:34px;height:34px;border-radius:10px;background:var(--primary);color:#F3E9D7;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-sm)}
+.brand-name{font-family:var(--font-display);font-size:20px;font-weight:700;line-height:1}
+.brand-sub{font-size:9px;letter-spacing:.3em;color:var(--text-sub);font-weight:600}
+.mainnav{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:999px;padding:4px;margin:0 auto}
+.nav-item{display:flex;align-items:center;gap:6px;height:34px;padding:0 16px;border-radius:999px;
+  font-size:13px;font-weight:600;color:var(--text-sub);transition:all .2s ease}
+.nav-item:hover{color:var(--primary)}
+.nav-item.active{background:var(--primary);color:#fff;box-shadow:var(--sh-sm)}
+.top-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.icon-btn{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-sub);transition:all .2s ease;position:relative}
+.icon-btn:hover{background:var(--surface-2);color:var(--primary)}
+.badge-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;
+  background:var(--danger);border:2px solid var(--bg)}
+.badge-num{position:absolute;top:2px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;
+  background:var(--danger);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--bg)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#F3E9D7;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;
+  border:2px solid #fff;box-shadow:var(--sh-sm);cursor:pointer}
+main#view{max-width:1180px;margin:0 auto;padding:calc(var(--topbar) + 28px) 24px 110px}
+/* ============ 通用视图元素 ============ */
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.view-title{font-size:32px;line-height:1.2;margin-top:4px}
+.view-sub{color:var(--text-sub);font-size:13px;margin-top:6px}
+.grid{display:grid;gap:16px}
+.section-title{font-size:20px;display:flex;align-items:center;gap:8px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.link-more{font-size:13px;color:var(--primary);font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.link-more:hover{gap:6px}
+.link-more{transition:gap .2s ease}
+.reveal{animation:fadeUp .55s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.empty{padding:44px 20px;text-align:center;color:var(--text-sub);font-size:13px}
+.empty svg{margin:0 auto 10px;opacity:.5}
+.skeleton{position:relative;overflow:hidden;background:var(--surface-2);border-radius:var(--r-sm)}
+.skeleton::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);
+  animation:shine 1.2s infinite}
+@keyframes shine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+/* modal / drawer / toast */
+.overlay{position:fixed;inset:0;background:rgba(31,42,36,.4);backdrop-filter:blur(4px);
+  z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-lg);
+  width:100%;max-width:520px;max-height:88vh;overflow:auto;animation:popIn .25s ease}
+.modal.wide{max-width:720px}
+@keyframes popIn{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;
+  border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+.modal-body{padding:22px}
+.drawer-mask{position:fixed;inset:0;background:rgba(31,42,36,.4);backdrop-filter:blur(4px);z-index:200;animation:fadeIn .2s ease}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,92vw);background:var(--surface);
+  z-index:201;box-shadow:var(--sh-lg);display:flex;flex-direction:column;animation:slideIn .28s ease}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:none}}
+.drawer-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.drawer-body{flex:1;overflow:auto;padding:16px 20px}
+.drawer-foot{padding:16px 20px;border-top:1px solid var(--border);background:var(--surface-2)}
+#toast-root{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:400;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--text);color:#F6F3EC;padding:10px 20px;border-radius:999px;font-size:13px;
+  box-shadow:var(--sh-lg);animation:toastIn .3s ease;display:flex;align-items:center;gap:8px}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* 底部 Tab Bar（移动端） */
+.tabbar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-top:1px solid var(--border);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.tabbar-inner{display:flex;justify-content:space-around}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;
+  color:var(--text-sub);padding:4px 8px;border-radius:10px;font-weight:600}
+.tab-item.active{color:var(--primary)}
+@media(max-width:767px){
+  .mainnav,.topbar #top-quick,.top-search{display:none}
+  .tabbar{display:block}
+  main#view{padding:calc(var(--topbar) + 18px) 16px 96px}
+  .view-title{font-size:24px}
+  .topbar-inner{padding:0 14px;gap:10px}
+  /* 网格在移动端折叠为单列 */
+  .grid[style*="grid-template-columns"]{grid-template-columns:1fr!important}
+  #health-metrics{grid-template-columns:1fr 1fr!important}
+}
+@media(min-width:768px) and (max-width:1023px){
+  .grid[style*="repeat(4,1fr)"]{grid-template-columns:1fr 1fr!important}
+  .grid[style*="1fr 1fr 1fr"]{grid-template-columns:1fr 1fr!important}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#/home">
+      <span class="brand-logo" id="brand-logo"></span>
+      <span><span class="brand-name">绒屿</span><br><span class="brand-sub">PAWISLE</span></span>
+    </a>
+    <nav class="mainnav" id="mainnav"></nav>
+    <div class="top-actions">
+      <button class="icon-btn top-search" id="top-search" title="搜索"></button>
+      <button class="icon-btn" id="top-bell" title="通知"><span class="badge-dot"></span></button>
+      <button class="icon-btn" id="top-cart" title="购物车"><span class="badge-num" id="cart-badge" style="display:none">0</span></button>
+      <button class="btn btn-primary btn-md" id="top-quick"><span>＋ 记一笔</span></button>
+      <div id="top-auth" style="display:flex;align-items:center"></div>
+    </div>
+  </div>
+</header>
+<main id="view"></main>
+<nav class="tabbar"><div class="tabbar-inner" id="tabbar"></div></nav>
+<div id="modal-root"></div>
+<div id="drawer-root"></div>
+<div id="toast-root"></div>
+<script>
+/* =====================================================
+   绒屿 PAWISLE · 单文件 SPA
+   结构：ICONS 图标表 → DB mock 数据 → S 状态层 → api 层（stub/真实可切换）→ 工具函数 → 视图渲染 → 路由 init
+===================================================== */
+/* ---------- Lucide 内联 SVG 图标注册表（stroke 1.8, currentColor） ---------- */
+const ICONS={
+"paw-print":'<path d="M11 14.5c-2.5 0-5 2-5 4.2 0 1.5 1.1 2.6 2.7 2.6 1 0 1.6-.4 2.3-.4s1.3.4 2.3.4c1.6 0 2.7-1.1 2.7-2.6 0-2.2-2.5-4.2-5-4.2z"/><circle cx="5.5" cy="10" r="1.7"/><circle cx="9.5" cy="5.5" r="1.7"/><circle cx="14.5" cy="5.5" r="1.7"/><circle cx="18.5" cy="10" r="1.7"/>',
+"heart-pulse":'<path d="M19 14c1.5-1.5 2-3.2 2-4.5A4.5 4.5 0 0 0 16.5 5c-1.8 0-3.4 1-4.5 2.5C10.9 6 9.3 5 7.5 5A4.5 4.5 0 0 0 3 9.5c0 1.3.5 3 2 4.5l7 7z"/><path d="M3.2 12h4l1.5-3 3 6 1.5-3h4.6"/>',
+"users":'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+"crown":'<path d="M2 8l4 4 6-7 6 7 4-4v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/>',
+"shopping-bag":'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+"search":'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>',
+"bell":'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+"plus":'<path d="M12 5v14M5 12h14"/>',
+"chevron-right":'<path d="m9 18 6-6-6-6"/>',
+"flame":'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+"star":'<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
+"calendar":'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+"syringe":'<path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/>',
+"weight":'<circle cx="12" cy="5" r="3"/><path d="M6.5 8h11L21 21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
+"activity":'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+"message-circle":'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+"bookmark":'<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+"map-pin":'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+"clock":'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+"check-circle":'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+"alert-triangle":'<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4M12 17h.01"/>',
+"x":'<path d="M18 6 6 18M6 6l12 12"/>',
+"minus":'<path d="M5 12h14"/>',
+"shopping-cart":'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+"badge-check":'<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76z"/><path d="m9 12 2 2 4-4"/>',
+"sparkles":'<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/>',
+"pill":'<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/>',
+"stethoscope":'<path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/>',
+"arrow-right":'<path d="M5 12h14m-7-7 7 7-7 7"/>',
+"camera":'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+"scissors":'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/>',
+"shield-check":'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+"gift":'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+"zap":'<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+"trending-up":'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+"send":'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+"heart":'<path d="M19 14c1.5-1.5 2-3.2 2-4.5A4.5 4.5 0 0 0 16.5 5c-1.8 0-3.4 1-4.5 2.5C10.9 6 9.3 5 7.5 5A4.5 4.5 0 0 0 3 9.5c0 1.3.5 3 2 4.5l7 7z"/>',
+"eye":'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+"cat":'<path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3.1-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5z"/><path d="M8 14v.5M16 14v.5"/><path d="M11.25 16.25h1.5L12 17l-.75-.75z"/>',
+"dog":'<path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5zM14.5 5.172c0-1.39 1.577-2.493 3.5-1.828 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5z"/><path d="M8 14v.5M16 14v.5"/><path d="M11.25 16.25h1.5L12 17l-.75-.75z"/>',
+"bone":'<path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5z"/>'
+};
+function icon(name,size=18){
+  const d=ICONS[name]||ICONS["paw-print"];
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">${d}</svg>`;
+}
+/* ---------- 工具 ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+const fmtK=n=>n>=10000?(n/10000).toFixed(1)+"w":n>=1000?(n/1000).toFixed(1)+"k":String(n);
+const money=n=>"¥"+Number(n).toFixed(n%1?2:0);
+/* ---------- Mock 数据库（单一数据源，兼作 API 不可用时的回退） ---------- */
+const DB={
+  user:{name:"林晚晴",city:"上海",plan:"free",since:"2025-03"},
+  pets:[
+    {id:"niangao",name:"年糕",species:"cat",breed:"布偶猫",gender:"妹妹",
+     age:"2岁4个月",weight:4.6,score:92,avatar:"assets/pet-niangao.jpg",
+     tags:["已绝育","室内饲养","玻璃胃"],
+     weights:[{d:"05-20",w:4.2},{d:"06-20",w:4.3},{d:"07-20",w:4.35},{d:"08-20",w:4.4},{d:"09-20",w:4.5},{d:"10-20",w:4.6}],
+     timeline:[
+       {date:"2026-10-12",type:"洗护",icon:"scissors",title:"季度洗护 + 毛发护理",note:"毛质状态良好，美容师建议保持每周梳毛 3 次"},
+       {date:"2026-09-08",type:"驱虫",icon:"pill",title:"体内外驱虫（大宠爱）",note:"下次驱虫：2026-12-08"},
+       {date:"2026-07-15",type:"体检",icon:"stethoscope",title:"年度体检",note:"各项指标正常，建议增加饮水量"},
+       {date:"2026-05-21",type:"疫苗",icon:"syringe",title:"狂犬疫苗",note:"接种顺利，无不良反应"},
+       {date:"2026-05-07",type:"疫苗",icon:"syringe",title:"猫三联加强针",note:"抗体水平合格"}],
+     reminders:[
+       {id:"r1",title:"指甲护理",date:"10-24",icon:"scissors",urgent:true},
+       {id:"r2",title:"换粮过渡第 3 天",date:"10-22",icon:"bone",urgent:false},
+       {id:"r3",title:"体内外驱虫",date:"12-08",icon:"pill",urgent:false}]},
+    {id:"keke",name:"可可",species:"dog",breed:"金毛寻回犬",gender:"弟弟",
+     age:"5岁1个月",weight:28.4,score:87,avatar:"assets/pet-keke.jpg",
+     tags:["已绝育","髋关节关注","每日两遛"],
+     weights:[{d:"05-20",w:27.2},{d:"06-20",w:27.6},{d:"07-20",w:27.9},{d:"08-20",w:28.1},{d:"09-20",w:28.3},{d:"10-20",w:28.4}],
+     timeline:[
+       {date:"2026-10-05",type:"体检",icon:"stethoscope",title:"半年度体检",note:"髋关节轻度磨损，建议补充软骨素"},
+       {date:"2026-08-19",type:"疫苗",icon:"syringe",title:"犬四联 + 狂犬",note:"接种顺利"},
+       {date:"2026-07-02",type:"洗护",icon:"scissors",title:"夏季剃毛 + 药浴",note:"皮肤状态良好"}],
+     reminders:[
+       {id:"r4",title:"软骨素补货",date:"10-25",icon:"pill",urgent:true},
+       {id:"r5",title:"疫苗抗体检测",date:"11-19",icon:"syringe",urgent:false}]}
+  ],
+  circles:[
+    {id:"c1",name:"布偶猫研究所",members:"12.8k",desc:"布偶猫的喂养、护理与行为交流",species:"cat"},
+    {id:"c2",name:"金毛大家庭",members:"23.4k",desc:"大型犬训练、运动与健康管理",species:"dog"},
+    {id:"c3",name:"科学喂养圈",members:"31.2k",desc:"生骨肉、熟自制与主粮测评",species:"all"},
+    {id:"c4",name:"猫咪行为学社",members:"8.6k",desc:"读懂猫主子的每一个信号",species:"cat"},
+    {id:"c5",name:"老年犬照护联盟",members:"6.2k",desc:"陪伴 TA 们优雅地变老",species:"dog"},
+    {id:"c6",name:"萌宠摄影集",members:"15.7k",desc:"用镜头记录毛孩子的日常",species:"all"}
+  ],
+  posts:[
+    {id:"p1",circle:"布偶猫研究所",author:"沈知遥",pet:"布偶 · 糯米",time:"2小时前",
+     title:"换粮第七天，软便终于消失了（附完整过渡表）",
+     excerpt:"从旧粮到新粮按 25% 递增，配合益生菌，第 5 天开始便便成型。过渡表贴在正文，玻璃胃布偶家庭可以直接抄作业。",
+     img:"assets/post-cat1.jpg",likes:486,comments:132,views:"2.1w",essence:true,memberOnly:false},
+    {id:"p2",circle:"金毛大家庭",author:"陈屿",pet:"金毛 · 豆豆",time:"4小时前",
+     title:"5 岁金毛髋关节养护实录：从跛行到恢复晨跑",
+     excerpt:"体检发现髋关节磨损后，我们坚持了 4 个月的游泳训练 + 软骨素 + 体重管理。分享给同样焦虑的家长们。",
+     img:"assets/post-dog1.jpg",likes:358,comments:96,views:"1.4w",essence:false,memberOnly:false},
+    {id:"p3",circle:"老年犬照护联盟",author:"顾一禾",pet:"田园犬 · 阿福",time:"6小时前",
+     title:"13 岁阿福的居家适老化改造清单",
+     excerpt:"防滑垫、缓坡台阶、加高食盆、夜间感应灯……一共 17 项改造，花费不到 800 元，但阿福的起居质量提升肉眼可见。",
+     img:"assets/post-senior.jpg",likes:294,comments:78,views:"9.6k",essence:true,memberOnly:false},
+    {id:"p4",circle:"科学喂养圈",author:"苏晚晴",pet:"英短 · 布丁",time:"8小时前",
+     title:"【会员专享】十款热门冻干横评：蛋白含量与复水性实测",
+     excerpt:"实验室送检 + 自家三只猫试吃双维度打分，附完整数据表格。结论可能和你想的不太一样。",
+     img:"assets/post-feed.jpg",likes:572,comments:210,views:"3.2w",essence:false,memberOnly:true},
+    {id:"p5",circle:"猫咪行为学社",author:"林深处",pet:"橘猫 · 蛋黄",time:"10小时前",
+     title:"猫半夜跑酷不是精力旺盛，是捕猎时钟没被满足",
+     excerpt:"睡前 15 分钟逗猫棒模拟捕猎 + 一顿夜宵，坚持一周，凌晨四点的跑酷声消失了。原理和方法都写在正文。",
+     likes:431,comments:145,views:"1.8w",essence:false,memberOnly:false},
+    {id:"p6",circle:"萌宠摄影集",author:"快门三秒",pet:"边牧 · 拿铁",time:"12小时前",
+     title:"逆光拍毛孩子的 3 个黄金时段",
+     excerpt:"日出后 1 小时、日落前 40 分钟、树荫下的正午。附参数设置和引导宠物看镜头的土办法。",
+     likes:267,comments:54,views:"8.2k",essence:false,memberOnly:false},
+    {id:"p7",circle:"布偶猫研究所",author:"沈知遥",pet:"布偶 · 糯米",time:"昨天",
+     title:"梳毛工具红黑榜：排梳、针梳、开结刀怎么选",
+     excerpt:"长毛猫家庭工具柜大公开。排梳选不锈钢宽细两用，开结刀慎用于腋下……",
+     likes:189,comments:67,views:"6.4k",essence:false,memberOnly:false},
+    {id:"p8",circle:"金毛大家庭",author:"阿澈",pet:"金毛 · 可乐",time:"昨天",
+     title:"狗狗游泳第一课：从抗拒到主动下水",
+     excerpt:"不要用扔的。找缓坡水域 + 救生衣 + 零食阶梯奖励，三次下水就敢自己游了。",
+     likes:342,comments:88,views:"1.1w",essence:false,memberOnly:false},
+    {id:"p9",circle:"科学喂养圈",author:"苏晚晴",pet:"英短 · 布丁",time:"昨天",
+     title:"【会员专享】主食罐喂养成本测算：每月到底要花多少",
+     excerpt:"按体重分段测算，附不同预算下的品牌组合方案，以及大促囤货的价格锚点。",
+     likes:508,comments:176,views:"2.4w",essence:false,memberOnly:true},
+    {id:"p10",circle:"猫咪行为学社",author:"林深处",pet:"橘猫 · 蛋黄",time:"2天前",
+     title:"多猫家庭新猫隔离期到底要多久",
+     excerpt:"至少 7 天，分气味交换、隔门对视、短时会面三步走。太快见面的代价可能是长期关系紧张。",
+     likes:256,comments:93,views:"7.8k",essence:false,memberOnly:false},
+    {id:"p11",circle:"老年犬照护联盟",author:"顾一禾",pet:"田园犬 · 阿福",time:"2天前",
+     title:"老年犬体检项目取舍：哪些每年必做",
+     excerpt:"血常规+生化+SDMA 是底线，心脏超声和腹部 B 超看品种。和医生沟通的 checklist 放在正文。",
+     likes:178,comments:45,views:"5.3k",essence:false,memberOnly:false},
+    {id:"p12",circle:"萌宠摄影集",author:"快门三秒",pet:"边牧 · 拿铁",time:"3天前",
+     title:"手机也能拍的「证件照」布光法",
+     excerpt:"一扇北向窗户 + 一张白床单 + 一块反光板（快递箱内衬锡纸也行），成本 0 元。",
+     likes:312,comments:61,views:"9.1k",essence:false,memberOnly:false}
+  ],
+  products:[
+    {id:"g1",name:"深海三文鱼全价猫粮 1.5kg",cat:"主粮",price:169,member:139,img:"assets/prod-food.jpg",tag:"热卖",desc:"86% 动物性原料，三文鱼单一肉源低敏配方，适合玻璃胃猫咪。"},
+    {id:"g2",name:"鸡肉南瓜主食罐 170g×6",cat:"主粮",price:89,member:72,img:"assets/prod-can.jpg",tag:"新品",desc:"无谷无胶，开罐可见真实肉丝，含水量 78%，帮猫咪补足水分。"},
+    {id:"g3",name:"冻干鹌鹑蛋黄 100g",cat:"零食",price:59,member:47,img:"assets/prod-freeze.jpg",tag:"口碑",desc:"-36℃ 低温冻干锁鲜，卵磷脂天然补充，毛发亮泽看得见。"},
+    {id:"g4",name:"深海鱼油软胶囊 60 粒",cat:"保健",price:129,member:99,img:"assets/prod-fishoil.jpg",tag:"复购王",desc:"rTG 形态高浓度 Omega-3，EPA+DHA ≥ 85%，美毛护心脑。"},
+    {id:"g5",name:"犬用软骨素关节片 120 片",cat:"保健",price:149,member:119,img:"assets/prod-joint.jpg",tag:"兽医推荐",desc:"氨糖+软骨素+MSM 黄金三角，中大型犬关节日常养护。"},
+    {id:"g6",name:"智能定时喂食器 4L",cat:"智能",price:329,member:269,img:"assets/prod-feeder.jpg",tag:"智能",desc:"App 远程出粮、语音唤食、断电续航 30 天，出差不再焦虑。"},
+    {id:"g7",name:"实木多层猫爬架",cat:"用品",price:459,member:389,img:"assets/prod-tree.jpg",tag:"高颜值",desc:"E0 级橡胶木，剑麻柱可替换，承重 25kg，稳如磐石。"},
+    {id:"g8",name:"耐咬发声磨牙玩具套装",cat:"用品",price:49,member:39,img:"assets/prod-toy.jpg",tag:"凑单",desc:"天然橡胶，内置发声器，洁齿颗粒设计，拆家转移神器。"},
+    {id:"g9",name:"宠物年度体检套餐（全国 300 院通用）",cat:"服务",price:399,member:319,img:"assets/prod-checkup.jpg",tag:"会员 8 折",desc:"血常规、生化 16 项、DR 影像、心脏听诊，含专业报告解读。"},
+    {id:"g10",name:"陶瓷恒温饮水机 2L",cat:"智能",price:199,member:159,img:"assets/prod-fountain.jpg",tag:"静音",desc:"陶瓷机身抑菌易洁，四重过滤，30dB 静音水泵，活水更吸引猫咪。"}
+  ],
+  plans:[
+    {id:"free",name:"漫游者",price:0,period:"永久免费",features:["基础健康档案","社区浏览与发帖","每月 1 次健康报告"]},
+    {id:"pro_m",name:"Pro 月卡",price:18,period:"每月",features:["无限健康报告与趋势分析","会员专享内容与圈子","商城会员价（低至 8 折）","专属身份标识","优先客服通道"]},
+    {id:"pro_y",name:"Pro 年卡",price:168,period:"每年",save:"省 ¥48",features:["月卡全部权益","年度体检套餐立减 ¥80","新品尝鲜优先购","线下活动免费名额","专属身份标识"]}
+  ]
+};
+/* ---------- 状态层（localStorage 持久化） ---------- */
+const LS_KEY="pawisle_v1";
+const S={
+  plan:"free", cart:[], likes:[], bookmarks:[], joined:["c1","c3"],
+  extraRecords:[], comments:{}, activePet:"niangao",
+  token:"", user:null,
+  load(){ try{Object.assign(this,JSON.parse(localStorage.getItem(LS_KEY)||"{}"))}catch(e){} },
+  save(){ localStorage.setItem(LS_KEY,JSON.stringify({plan:this.plan,cart:this.cart,likes:this.likes,bookmarks:this.bookmarks,joined:this.joined,extraRecords:this.extraRecords,comments:this.comments,token:this.token,user:this.user})) },
+  isPro(){ return this.plan!=="free" }
+};
+S.load();
+/* ---------- API 层：真实后端优先，失败自动回退到本地 mock ----------
+   配置：把 API_BASE 改为你的 Worker 地址即可接入真实后端，例如
+   const API_BASE = "https://pawisle-api.your-subdomain.workers.dev";
+   API_BASE 为空串时 = 纯离线演示模式（走本地 mock）。 */
+const API_BASE="";
+async function req(path,opts={}){
+  const headers={};
+  if(opts.body) headers["Content-Type"]="application/json";
+  if(S.token) headers["Authorization"]="Bearer "+S.token;
+  const r=await fetch(API_BASE+path,{
+    method:opts.method||(opts.body?"POST":"GET"),
+    headers,
+    body:opts.body?JSON.stringify(opts.body):undefined,
+    credentials:"include"
+  });
+  if(r.status===401){ /* 未登录/令牌失效：清态并弹登录框，不回退 mock */
+    S.token=""; S.user=null; S.save(); renderAuthArea();
+    const err=new Error("请先登录"); err.auth=true;
+    openAuthModal();
+    throw err;
+  }
+  if(!r.ok){ let msg="HTTP "+r.status; try{ const j=await r.json(); if(j.error) msg=j.error; }catch(e){} throw new Error(msg); }
+  return r.json();
+}
+/* 统一包装：设置 API_BASE 时走真实接口，失败或为空时回退 mock */
+async function call(real,mock){
+  if(!API_BASE) return mock();
+  try{ return await real(); }catch(e){ if(e&&e.auth) throw e; console.warn("[api] 后端不可用，回退本地 mock:",e.message); return mock(); }
+}
+/* 鉴权失败属于业务流程，交由弹窗处理，不在控制台抛未捕获异常 */
+window.addEventListener("unhandledrejection",e=>{ if(e.reason&&e.reason.auth) e.preventDefault(); });
+const api={
+  // POST /api/auth/register body:{name,email,password} → {token,user,petId}
+  async register(name,email,password){ return call(
+    ()=>req(`/api/auth/register`,{body:{name,email,password}}),
+    async()=>{ await delay(500); return {token:"mock",user:{id:"u1",name,email},petId:"niangao"}; }); },
+  // POST /api/auth/login body:{email,password} → {token,user,petId}
+  async login(email,password){ return call(
+    ()=>req(`/api/auth/login`,{body:{email,password}}),
+    async()=>{ await delay(420); return {token:"mock",user:{id:"u1",name:DB.user.name,email},petId:"niangao"}; }); },
+  // GET /api/me → {user,plan,petId}（需登录）
+  async me(){ return call(
+    ()=>req(`/api/me`),
+    async()=>{ await delay(200); return {user:S.user||{name:DB.user.name},plan:S.plan,petId:S.activePet}; }); },
+  // GET /api/home?petId=xxx → {pet,posts,circles}
+  async getHome(petId){ return call(
+    ()=>req(`/api/home?petId=${encodeURIComponent(petId)}`),
+    async()=>{ await delay(320); return {pet:DB.pets.find(p=>p.id===petId),posts:DB.posts.slice(0,6),circles:DB.circles}; }); },
+  // GET /api/pets/:id/health → {pet,weights,timeline,reminders}
+  async getHealth(petId){ return call(
+    ()=>req(`/api/pets/${petId}/health`),
+    async()=>{ await delay(350); const p=DB.pets.find(p=>p.id===petId); return {pet:p,weights:p.weights,timeline:[...p.timeline,...S.extraRecords.filter(r=>r.petId===petId)].sort((a,b)=>b.date.localeCompare(a.date)),reminders:p.reminders}; }); },
+  // POST /api/pets/:id/records body:{type,icon,title,date,note} → record
+  async addRecord(petId,rec){ return call(
+    ()=>req(`/api/pets/${petId}/records`,{body:rec}),
+    async()=>{ await delay(520); const r={petId,...rec}; S.extraRecords.push(r); S.save(); return r; }); },
+  // GET /api/community?tab=&circle= → {posts,circles}
+  async getCommunity(tab,circleId){ return call(
+    ()=>req(`/api/community?tab=${tab}&circle=${circleId}`),
+    async()=>{ await delay(320); let list=DB.posts.filter(p=>!circleId||circleId==="all"||DB.circles.find(c=>c.id===circleId)?.name===p.circle); if(tab==="essence")list=list.filter(p=>p.essence); if(tab==="latest")list=[...list].reverse(); return {posts:list,circles:DB.circles}; }); },
+  // GET /api/posts/:id → {post,comments}
+  async getPost(id){ return call(
+    ()=>req(`/api/posts/${id}`),
+    async()=>{ await delay(280); return {post:DB.posts.find(p=>p.id===id),comments:S.comments[id]||[]}; }); },
+  // POST /api/posts/:id/comments body:{text} → comment
+  async addComment(id,text){ return call(
+    ()=>req(`/api/posts/${id}/comments`,{body:{text}}),
+    async()=>{ await delay(420); const c={author:DB.user.name,text,time:"刚刚"}; (S.comments[id]=S.comments[id]||[]).unshift(c); S.save(); return c; }); },
+  // POST /api/circles/:id/join → {joined:boolean}
+  async toggleCircle(id){ return call(
+    ()=>req(`/api/circles/${id}/join`,{body:{}}),
+    async()=>{ await delay(260); const i=S.joined.indexOf(id); i>=0?S.joined.splice(i,1):S.joined.push(id); S.save(); return {joined:i<0}; }); },
+  // GET /api/products?cat= → products[]
+  async getProducts(cat){ return call(
+    ()=>req(`/api/products?cat=${encodeURIComponent(cat||"全部")}`),
+    async()=>{ await delay(320); return cat&&cat!=="全部"?DB.products.filter(p=>p.cat===cat):DB.products; }); },
+  // POST /api/cart body:{productId,qty} → cart
+  async addToCart(id,qty=1){ return call(
+    ()=>req(`/api/cart`,{body:{productId:id,qty}}),
+    async()=>{ await delay(240); const it=S.cart.find(c=>c.id===id); it?it.qty+=qty:S.cart.push({id,qty}); S.save(); return S.cart; }); },
+  // POST /api/orders body:{items} → {orderNo}
+  async checkout(){ return call(
+    ()=>req(`/api/orders`,{body:{items:S.cart}}),
+    async()=>{ await delay(640); const no="PY"+Date.now().toString().slice(-8); S.cart=[]; S.save(); return {orderNo:no}; }).then(r=>{ if(API_BASE){S.cart=[];S.save();} return r; }); },
+  // POST /api/membership/subscribe body:{planId} → {plan}
+  async subscribe(planId){ return call(
+    ()=>req(`/api/membership/subscribe`,{body:{planId}}),
+    async()=>{ await delay(580); S.plan=planId; S.save(); return {plan:planId}; }).then(r=>{ if(API_BASE){S.plan=planId;S.save();} return r; }); }
+};
+/* 访问量埋点：页面加载与路由切换时上报（真实后端模式下生效） */
+function trackPV(){
+  if(!API_BASE) return;
+  try{ fetch(API_BASE+"/api/track",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({page:location.hash||"#/home",ts:Date.now(),ref:document.referrer||""}),
+    keepalive:true}).catch(()=>{}); }catch(e){}
+}
+/* ---------- 登录 / 注册 ---------- */
+let AUTH_MODE="login";
+function renderAuthArea(){
+  const el=$("#top-auth"); if(!el) return;
+  if(S.user){
+    el.innerHTML=`<div class="avatar" title="${esc(S.user.name||"")}">${esc((S.user.name||"友")[0])}</div>`;
+    el.firstElementChild.onclick=openUserMenu;
+  }else{
+    el.innerHTML=`<button class="btn btn-primary btn-md">登录 / 注册</button>`;
+    el.firstElementChild.onclick=openAuthModal;
+  }
+}
+function openAuthModal(){
+  openModal(`${modalHead(AUTH_MODE==="login"?"欢迎回来":"加入绒屿")}
+  <div class="modal-body">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="chip ${AUTH_MODE==="login"?"active":""}" onclick="setAuthMode('login')">登录</button>
+      <button class="chip ${AUTH_MODE==="register"?"active":""}" onclick="setAuthMode('register')">注册</button>
+    </div>
+    ${AUTH_MODE==="register"?`<div class="field"><label>昵称</label><input id="au-name" placeholder="怎么称呼你" maxlength="12"><span class="err-msg">请填写昵称</span></div>`:""}
+    <div class="field"><label>邮箱</label><input id="au-email" type="email" placeholder="you@example.com"><span class="err-msg">请填写有效邮箱</span></div>
+    <div class="field"><label>密码</label><input id="au-pass" type="password" placeholder="至少 6 位"><span class="err-msg">密码至少 6 位</span></div>
+    <button class="btn btn-primary btn-lg" id="au-submit" style="width:100%" onclick="submitAuth()">${AUTH_MODE==="login"?"登录":"创建账号"}</button>
+    ${API_BASE?`<p style="font-size:12px;color:var(--text-sub);text-align:center;margin-top:10px">演示账号：demo@pawisle.cn / pawisle2026</p>`
+      :`<p style="font-size:12px;color:var(--text-sub);text-align:center;margin-top:10px">离线演示模式：任意邮箱密码可直接登录</p>`}
+  </div>`);
+}
+function setAuthMode(m){ AUTH_MODE=m; openAuthModal(); }
+async function submitAuth(){
+  const email=$("#au-email").value.trim(), pass=$("#au-pass").value;
+  let ok=true;
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ $("#au-email").closest(".field").classList.add("err"); ok=false; }
+  if(pass.length<6){ $("#au-pass").closest(".field").classList.add("err"); ok=false; }
+  let name="";
+  if(AUTH_MODE==="register"){ name=$("#au-name").value.trim(); if(!name){ $("#au-name").closest(".field").classList.add("err"); ok=false; } }
+  if(!ok) return;
+  const btn=$("#au-submit"); btn.disabled=true; btn.textContent="请稍候…";
+  try{
+    const r = AUTH_MODE==="login" ? await api.login(email,pass) : await api.register(name,email,pass);
+    S.token=r.token||""; S.user=r.user; if(r.petId) S.activePet=r.petId; S.save();
+    closeModal(); renderAuthArea(); toast("欢迎，"+(r.user.name||"")); refresh();
+  }catch(e){
+    btn.disabled=false; btn.textContent=AUTH_MODE==="login"?"登录":"创建账号";
+    toast(e.message||"操作失败","alert-triangle");
+  }
+}
+function openUserMenu(){
+  openModal(`${modalHead("账号")}
+  <div class="modal-body">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="avatar" style="width:44px;height:44px">${esc((S.user.name||"友")[0])}</div>
+      <div><b>${esc(S.user.name||"")}</b><div style="font-size:12px;color:var(--text-sub)">${esc(S.user.email||"")}</div></div>
+    </div>
+    <button class="btn btn-md" style="width:100%;border:1px solid var(--border)" onclick="doLogout()">退出登录</button>
+  </div>`);
+}
+function doLogout(){ S.token=""; S.user=null; S.save(); closeModal(); renderAuthArea(); toast("已退出登录"); refresh(); }
+/* ---------- 通用 UI：toast / modal / drawer ---------- */
+function toast(msg,ic="check-circle"){
+  const el=document.createElement("div"); el.className="toast";
+  el.innerHTML=icon(ic,16)+esc(msg); $("#toast-root").appendChild(el);
+  setTimeout(()=>{el.style.opacity="0";el.style.transition="opacity .3s";setTimeout(()=>el.remove(),300)},2400);
+}
+function openModal(html,wide){
+  closeModal();
+  const ov=document.createElement("div"); ov.className="overlay"; ov.id="modal-ov";
+  ov.innerHTML=`<div class="modal${wide?" wide":""}" role="dialog">${html}</div>`;
+  ov.addEventListener("click",e=>{ if(e.target===ov) closeModal(); });
+  $("#modal-root").appendChild(ov); document.body.style.overflow="hidden";
+  return ov.querySelector(".modal");
+}
+function closeModal(){ $("#modal-ov")?.remove(); document.body.style.overflow=""; }
+function modalHead(title){ return `<div class="modal-head"><h3 style="font-size:18px">${esc(title)}</h3><button class="icon-btn" onclick="closeModal()">${icon("x",18)}</button></div>`; }
+function openDrawer(html){
+  closeDrawer();
+  const root=$("#drawer-root");
+  root.innerHTML=`<div class="drawer-mask" onclick="closeDrawer()"></div><aside class="drawer" id="cart-drawer">${html}</aside>`;
+  document.body.style.overflow="hidden";
+}
+function closeDrawer(){ $("#drawer-root").innerHTML=""; document.body.style.overflow=""; }
+function updateCartBadge(){
+  const n=S.cart.reduce((s,c)=>s+c.qty,0), b=$("#cart-badge");
+  b.textContent=n; b.style.display=n?"flex":"none";
+}
+/* ---------- SVG 图表（手写，无图表库） ---------- */
+function scoreRing(score,size=120){
+  const r=(size-14)/2, c=2*Math.PI*r, off=c*(1-score/100);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#EDE7D9" stroke-width="9"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--primary)" stroke-width="9"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+      transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset 1s ease"/>
+    <text x="${size/2}" y="${size/2-2}" text-anchor="middle" font-size="26" font-weight="700" fill="var(--text)" font-family="Georgia,serif">${score}</text>
+    <text x="${size/2}" y="${size/2+18}" text-anchor="middle" font-size="10" fill="var(--text-sub)" letter-spacing="2">健康分</text>
+  </svg>`;
+}
+function weightChart(data,w=560,h=180){
+  const ws=data.map(d=>d.w), min=Math.min(...ws)-0.2, max=Math.max(...ws)+0.2;
+  const px=34, py=20, iw=w-px-14, ih=h-py-26;
+  const X=i=>px+iw*(i/(data.length-1)), Y=v=>py+ih*(1-(v-min)/(max-min));
+  const pts=data.map((d,i)=>[X(i),Y(d.w)]);
+  const line=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  const area=line+` L${pts[pts.length-1][0].toFixed(1)},${py+ih} L${pts[0][0].toFixed(1)},${py+ih} Z`;
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto" role="img" aria-label="体重趋势">
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1E4D3B" stop-opacity=".18"/><stop offset="1" stop-color="#1E4D3B" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${[0,.5,1].map(t=>{const y=py+ih*t;return `<line x1="${px}" y1="${y}" x2="${w-14}" y2="${y}" stroke="#EDE7D9" stroke-dasharray="3 5"/><text x="${px-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#A8B3AB">${(max-(max-min)*t).toFixed(1)}</text>`}).join("")}
+    <path d="${area}" fill="url(#wg)"/>
+    <path d="${line}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="var(--primary)" stroke-width="2.2"><title>${data[i].d} · ${data[i].w}kg</title></circle>
+      <text x="${p[0]}" y="${h-6}" text-anchor="middle" font-size="10" fill="#A8B3AB">${data[i].d}</text>`).join("")}
+  </svg>`;
+}
+/* ---------- 共享小卡片 ---------- */
+function postCard(p,i=0){
+  const liked=S.likes.includes(p.id), marked=S.bookmarks.includes(p.id);
+  return `<article class="card hoverable reveal" style="padding:18px;animation-delay:${i*70}ms;cursor:pointer" onclick="openPost('${p.id}')">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <span class="chip" style="height:24px;padding:0 10px;font-size:12px;cursor:default">${esc(p.circle)}</span>
+      ${p.essence?`<span style="color:var(--accent);display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600">${icon("star",13)}精华</span>`:""}
+      ${p.memberOnly?`<span style="color:var(--accent);display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600">${icon("crown",13)}会员</span>`:""}
+    </div>
+    <h3 style="font-size:16px;line-height:1.45;margin-bottom:6px">${esc(p.title)}</h3>
+    ${p.img?`<img src="${p.img}" alt="${esc(p.title)}" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:var(--r-sm);margin:8px 0">`:""}
+    <p style="color:var(--text-sub);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.excerpt)}</p>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:12px;font-size:12px;color:var(--text-sub)">
+      <span>${esc(p.author)} · ${esc(p.time)}</span>
+      <span style="margin-left:auto;display:flex;gap:12px">
+        <button class="icon-btn" style="width:auto;height:auto;padding:4px;gap:4px;font-size:12px;${liked?"color:var(--danger)":""}" onclick="event.stopPropagation();toggleLike('${p.id}')">${icon("heart",15)}${p.likes+(liked?1:0)}</button>
+        <span style="display:inline-flex;align-items:center;gap:4px">${icon("message-circle",15)}${p.comments}</span>
+        <button class="icon-btn" style="width:auto;height:auto;padding:4px;${marked?"color:var(--accent)":""}" onclick="event.stopPropagation();toggleBookmark('${p.id}')">${icon("bookmark",15)}</button>
+      </span>
+    </div>
+  </article>`;
+}
+function toggleLike(id){ const i=S.likes.indexOf(id); i>=0?S.likes.splice(i,1):S.likes.push(id); S.save(); refresh(); }
+function toggleBookmark(id){ const i=S.bookmarks.indexOf(id); i>=0?S.bookmarks.splice(i,1):S.bookmarks.push(id); S.save(); toast(i>=0?"已取消收藏":"已收藏","bookmark"); refresh(); }
+/* ---------- 视图 1：首页 ---------- */
+async function viewHome(){
+  const view=$("#view");
+  view.innerHTML=`<div class="skeleton" style="height:220px;border-radius:var(--r-lg)"></div>
+    <div class="grid" style="grid-template-columns:2fr 1fr;margin-top:16px"><div class="skeleton" style="height:300px"></div><div class="skeleton" style="height:300px"></div></div>`;
+  const {pet,posts,circles}=await api.getHome(S.activePet);
+  const pro=S.isPro();
+  view.innerHTML=`
+  <section class="card reveal" style="padding:28px;border-radius:var(--r-lg);display:flex;gap:28px;align-items:center;flex-wrap:wrap;background:linear-gradient(120deg,#fff 60%,rgba(30,77,59,.05))">
+    <div style="position:relative;flex-shrink:0">
+      <img src="${pet.avatar}" alt="${esc(pet.name)}" style="width:120px;height:120px;border-radius:24px;object-fit:cover;box-shadow:var(--sh-md)">
+      <span style="position:absolute;bottom:-8px;right:-8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;display:flex;gap:4px;align-items:center">${icon(pet.species==="cat"?"cat":"dog",14)}${esc(pet.breed)}</span>
+    </div>
+    <div style="flex:1;min-width:220px">
+      <div class="kicker">PAWISLE JOURNAL</div>
+      <h1 style="font-size:32px;margin:4px 0 6px">晚上好，晚晴</h1>
+      <p style="color:var(--text-sub)">今天也是 <b style="color:var(--text)">${esc(pet.name)}</b> 健康的第 <b style="color:var(--primary)">${pet.score*9}</b> 天 · ${esc(pet.age)} · ${pet.weight}kg</p>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        ${DB.pets.map(p=>`<button class="chip ${p.id===pet.id?"active":""}" onclick="switchPet('${p.id}')">${icon(p.species==="cat"?"cat":"dog",14)} ${esc(p.name)}</button>`).join("")}
+      </div>
+    </div>
+    <div style="flex-shrink:0;text-align:center">${scoreRing(pet.score)}
+      <div style="margin-top:6px"><button class="btn btn-ghost btn-sm" onclick="go('health')">查看档案 ${icon("arrow-right",13)}</button></div>
+    </div>
+  </section>
+  <div class="grid" style="grid-template-columns:2fr 1fr;margin-top:16px;align-items:start">
+    <div>
+      <section class="card reveal" style="padding:22px;animation-delay:80ms">
+        <div class="sec-head"><h2 class="section-title">${icon("trending-up",20)}体重趋势</h2>
+          <span style="font-size:12px;color:var(--text-sub)">近 6 个月 · 当前 ${pet.weight}kg</span></div>
+        ${weightChart(pet.weights)}
+      </section>
+      <div class="sec-head" style="margin-top:24px"><h2 class="section-title">${icon("flame",20)}圈层热议</h2>
+        <a class="link-more" href="#/community">进入社区 ${icon("chevron-right",14)}</a></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr">${posts.slice(0,4).map((p,i)=>postCard(p,i)).join("")}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <section class="card reveal" style="padding:20px;animation-delay:120ms">
+        <div class="sec-head"><h2 class="section-title" style="font-size:17px">${icon("clock",18)}今日提醒</h2></div>
+        ${pet.reminders.map(r=>`
+          <div style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)">
+            <span style="width:34px;height:34px;border-radius:10px;background:${r.urgent?"rgba(191,74,60,.08)":"var(--surface-2)"};color:${r.urgent?"var(--danger)":"var(--primary)"};display:flex;align-items:center;justify-content:center">${icon(r.icon,16)}</span>
+            <div style="flex:1"><div style="font-weight:600;font-size:13px">${esc(r.title)}</div>
+              <div style="font-size:12px;color:${r.urgent?"var(--danger)":"var(--text-sub)"}">${esc(r.date)}${r.urgent?" · 临近":""}</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="go('health')">处理</button>
+          </div>`).join("")}
+        <button class="btn btn-primary btn-md" style="width:100%;margin-top:14px" onclick="openRecordModal()">${icon("plus",16)}记一笔</button>
+      </section>
+      <section class="card reveal" style="padding:20px;animation-delay:160ms">
+        <div class="sec-head"><h2 class="section-title" style="font-size:17px">${icon("users",18)}精选圈子</h2>
+          <a class="link-more" href="#/community">全部</a></div>
+        ${circles.slice(0,4).map(c=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+            <span style="width:36px;height:36px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--primary)">${icon(c.species==="dog"?"dog":c.species==="cat"?"cat":"users",17)}</span>
+            <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${esc(c.name)}</div>
+              <div style="font-size:12px;color:var(--text-sub)">${c.members} 位岛民</div></div>
+            <button class="btn ${S.joined.includes(c.id)?"btn-ghost":"btn-primary"} btn-sm" onclick="joinCircle('${c.id}')">${S.joined.includes(c.id)?"已加入":"加入"}</button>
+          </div>`).join("")}
+      </section>
+      ${pro?`
+      <section class="card reveal" style="padding:20px;animation-delay:200ms;border-color:rgba(192,122,46,.35);background:linear-gradient(135deg,rgba(192,122,46,.07),rgba(192,122,46,.02))">
+        <div style="display:flex;gap:8px;align-items:center;color:var(--accent);font-weight:700">${icon("crown",18)}Pro 会员生效中</div>
+        <p style="font-size:13px;color:var(--text-sub);margin-top:8px">感谢陪伴。本周已为你生成 ${esc(pet.name)} 的健康周报，记得查看趋势解读。</p>
+        <button class="btn btn-gold btn-sm" style="margin-top:12px" onclick="go('membership')">查看权益 ${icon("arrow-right",13)}</button>
+      </section>`:`
+      <section class="card reveal" style="padding:20px;animation-delay:200ms;background:var(--primary);color:#F3EFE6;border:none">
+        <div style="display:flex;gap:8px;align-items:center;font-weight:700;font-size:16px">${icon("crown",18)}开通 Pro 会员</div>
+        <p style="font-size:13px;opacity:.82;margin-top:8px">无限健康报告 · 会员专享内容 · 商城低至 8 折会员价</p>
+        <button class="btn btn-gold btn-md" style="margin-top:14px;width:100%" onclick="go('membership')">了解会员 ${icon("arrow-right",15)}</button>
+      </section>`}
+    </div>
+  </div>`;
+}
+function switchPet(id){ S.activePet=id; refresh(); }
+/* ---------- 视图 2：健康档案 ---------- */
+async function viewHealth(){
+  const view=$("#view");
+  view.innerHTML=`<div class="skeleton" style="height:120px;border-radius:var(--r-lg)"></div><div class="grid" style="grid-template-columns:2fr 1fr;margin-top:16px"><div class="skeleton" style="height:340px"></div><div class="skeleton" style="height:340px"></div></div>`;
+  const {pet,weights,timeline,reminders}=await api.getHealth(S.activePet);
+  const last=weights[weights.length-1], prev=weights[weights.length-2];
+  const delta=(last.w-prev.w).toFixed(2);
+  const TYPE_COLOR={"疫苗":"var(--success)","体检":"var(--primary)","驱虫":"var(--warning)","洗护":"var(--accent)","记录":"var(--text-sub)"};
+  view.innerHTML=`
+  <div class="view-head reveal">
+    <div><div class="kicker">HEALTH ARCHIVE</div><h1 class="view-title">健康档案</h1>
+      <p class="view-sub">疫苗、体检、驱虫与体重，一切有迹可循</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${DB.pets.map(p=>`<button class="chip ${p.id===pet.id?"active":""}" onclick="switchPet('${p.id}')">${icon(p.species==="cat"?"cat":"dog",14)} ${esc(p.name)}</button>`).join("")}
+      <button class="btn btn-primary btn-md" onclick="openRecordModal()">${icon("plus",16)}添加记录</button>
+    </div>
+  </div>
+  <div class="grid reveal" style="grid-template-columns:repeat(4,1fr);animation-delay:60ms" id="health-metrics">
+    ${[
+      {ic:"weight",label:"当前体重",val:last.w+" kg",sub:`较上月 ${delta>0?"+":""}${delta} kg`},
+      {ic:"heart-pulse",label:"健康评分",val:pet.score+" 分",sub:pet.score>=90?"状态极佳":"状态良好"},
+      {ic:"syringe",label:"疫苗记录",val:timeline.filter(t=>t.type==="疫苗").length+" 次",sub:"均在有效期内"},
+      {ic:"activity",label:"本年记录",val:timeline.length+" 条",sub:"持续追踪中"}
+    ].map(m=>`<div class="card" style="padding:18px">
+      <div style="display:flex;gap:8px;align-items:center;color:var(--text-sub);font-size:12px">${icon(m.ic,15)}${m.label}</div>
+      <div style="font-size:24px;font-weight:700;font-family:var(--font-display);margin-top:6px">${m.val}</div>
+      <div style="font-size:12px;color:var(--text-sub)">${m.sub}</div></div>`).join("")}
+  </div>
+  <div class="grid" style="grid-template-columns:2fr 1fr;margin-top:16px;align-items:start">
+    <div>
+      <section class="card reveal" style="padding:22px;animation-delay:100ms">
+        <div class="sec-head"><h2 class="section-title">${icon("trending-up",20)}体重曲线</h2>
+          <span style="font-size:12px;color:var(--text-sub)">单位 kg · 悬停查看详情</span></div>
+        ${weightChart(weights)}
+      </section>
+      <section class="card reveal" style="padding:22px;margin-top:16px;animation-delay:140ms">
+        <div class="sec-head"><h2 class="section-title">${icon("calendar",20)}健康时间线</h2></div>
+        ${timeline.length?timeline.map((t,i)=>`
+          <div style="display:flex;gap:14px;padding:14px 0;${i<timeline.length-1?"border-bottom:1px dashed var(--border)":""}">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <span style="width:38px;height:38px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:${TYPE_COLOR[t.type]||"var(--primary)"};display:flex;align-items:center;justify-content:center">${icon(t.icon||"activity",17)}</span>
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <b style="font-size:14px">${esc(t.title)}</b>
+                <span class="chip" style="height:22px;padding:0 9px;font-size:11px;cursor:default">${esc(t.type)}</span>
+                <span style="margin-left:auto;font-size:12px;color:var(--text-sub)">${esc(t.date)}</span>
+              </div>
+              <p style="font-size:13px;color:var(--text-sub);margin-top:4px">${esc(t.note||"")}</p>
+            </div>
+          </div>`).join(""):`<div class="empty">${icon("activity",32)}<br>暂无记录，点击「添加记录」开始追踪</div>`}
+      </section>
+    </div>
+    <aside style="display:flex;flex-direction:column;gap:16px">
+      <section class="card reveal" style="padding:20px;animation-delay:120ms">
+        <div style="display:flex;gap:14px;align-items:center">
+          <img src="${pet.avatar}" alt="${esc(pet.name)}" style="width:64px;height:64px;border-radius:16px;object-fit:cover">
+          <div><b style="font-size:17px;font-family:var(--font-display)">${esc(pet.name)}</b>
+            <div style="font-size:12px;color:var(--text-sub)">${esc(pet.breed)} · ${esc(pet.gender)} · ${esc(pet.age)}</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+          ${pet.tags.map(t=>`<span class="chip" style="height:24px;font-size:12px;padding:0 10px;cursor:default">${esc(t)}</span>`).join("")}
+        </div>
+      </section>
+      <section class="card reveal" style="padding:20px;animation-delay:160ms">
+        <div class="sec-head"><h2 class="section-title" style="font-size:17px">${icon("bell",18)}待办提醒</h2></div>
+        ${reminders.map(r=>`
+          <div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--border)">
+            <span style="color:${r.urgent?"var(--danger)":"var(--primary)"}">${icon(r.icon,16)}</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600">${esc(r.title)}</div>
+              <div style="font-size:12px;color:${r.urgent?"var(--danger)":"var(--text-sub)"}">${esc(r.date)}${r.urgent?" · 临近":""}</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="doneReminder(this,'${r.id}')">完成</button>
+          </div>`).join("")}
+      </section>
+    </aside>
+  </div>`;
+}
+function doneReminder(btn,id){
+  btn.disabled=true; btn.textContent="已完成";
+  toast("已标记完成，继续保持","check-circle");
+  const pet=DB.pets.find(p=>p.id===S.activePet);
+  pet.reminders=pet.reminders.filter(r=>r.id!==id);
+  setTimeout(()=>{ if(location.hash.includes("health")) refresh(); },600);
+}
+/* ---------- 添加记录 Modal（表单校验 + 提交 loading） ---------- */
+function openRecordModal(){
+  const pet=DB.pets.find(p=>p.id===S.activePet);
+  const m=openModal(`${modalHead("为 "+esc(pet.name)+" 记一笔")}
+  <div class="modal-body">
+    <div class="field"><label>记录类型</label>
+      <select id="rec-type"><option>记录</option><option>疫苗</option><option>体检</option><option>驱虫</option><option>洗护</option></select>
+      <span class="err-msg">请选择类型</span></div>
+    <div class="field"><label>标题</label><input id="rec-title" placeholder="如：猫三联加强针 / 半年度体检" maxlength="30"><span class="err-msg">请填写标题</span></div>
+    <div class="field"><label>日期</label><input id="rec-date" type="date" value="2026-10-20"><span class="err-msg">请选择日期</span></div>
+    <div class="field"><label>备注</label><textarea id="rec-note" rows="3" placeholder="医生嘱咐、下次时间、注意事项……" maxlength="120"></textarea></div>
+    <button class="btn btn-primary btn-lg" id="rec-submit" style="width:100%" onclick="submitRecord()">保存记录</button>
+  </div>`);
+  ["rec-type","rec-title","rec-date"].forEach(id=>{
+    m.querySelector("#"+id).addEventListener("input",e=>e.target.closest(".field").classList.remove("err"));
+  });
+}
+async function submitRecord(){
+  let ok=true;
+  const title=$("#rec-title"), date=$("#rec-date");
+  if(!title.value.trim()){ title.closest(".field").classList.add("err"); ok=false; }
+  if(!date.value){ date.closest(".field").classList.add("err"); ok=false; }
+  if(!ok) return;
+  const btn=$("#rec-submit"); btn.disabled=true; btn.innerHTML="保存中…";
+  const type=$("#rec-type").value;
+  const iconMap={"疫苗":"syringe","体检":"stethoscope","驱虫":"pill","洗护":"scissors","记录":"activity"};
+  await api.addRecord(S.activePet,{type,icon:iconMap[type],title:title.value.trim(),date:date.value,note:$("#rec-note").value.trim()});
+  closeModal(); toast("记录已保存");
+  if(location.hash.includes("health")) refresh();
+}
+/* ---------- 视图 3：圈层社区 ---------- */
+let COMM_TAB="rec", COMM_CIRCLE="all";
+async function viewCommunity(){
+  const view=$("#view");
+  view.innerHTML=`<div class="skeleton" style="height:100px;border-radius:var(--r-lg)"></div><div class="grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:16px">${'<div class="skeleton" style="height:260px"></div>'.repeat(6)}</div>`;
+  const {posts,circles}=await api.getCommunity(COMM_TAB,COMM_CIRCLE);
+  view.innerHTML=`
+  <div class="view-head reveal">
+    <div><div class="kicker">COMMUNITY</div><h1 class="view-title">圈层社区</h1>
+      <p class="view-sub">和同频的铲屎官一起，把养宠这件事越过越明白</p></div>
+    <button class="btn btn-primary btn-md" onclick="toast('发帖功能即将上线，敬请期待','sparkles')">${icon("plus",16)}发布帖子</button>
+  </div>
+  <div class="reveal" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;animation-delay:60ms">
+    <button class="chip ${COMM_CIRCLE==="all"?"active":""}" onclick="setCircle('all')">全部</button>
+    ${circles.map(c=>`<button class="chip ${COMM_CIRCLE===c.id?"active":""}" onclick="setCircle('${c.id}')">${esc(c.name)} · ${c.members}</button>`).join("")}
+  </div>
+  <div class="reveal" style="display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);animation-delay:90ms">
+    ${[["rec","推荐"],["latest","最新"],["essence","精华"]].map(([k,n])=>`
+      <button onclick="setCommTab('${k}')" style="padding:10px 18px;font-weight:600;font-size:14px;color:${COMM_TAB===k?"var(--primary)":"var(--text-sub)"};border-bottom:2px solid ${COMM_TAB===k?"var(--primary)":"transparent"};transition:all .2s">${n}</button>`).join("")}
+  </div>
+  ${posts.length?`<div class="grid" style="grid-template-columns:1fr 1fr 1fr">${posts.map((p,i)=>postCard(p,i)).join("")}</div>`
+    :`<div class="card empty">${icon("users",36)}<br>这个圈子还很安静，来发第一帖吧</div>`}
+  <section class="card reveal" style="padding:20px;margin-top:20px;animation-delay:120ms">
+    <div class="sec-head"><h2 class="section-title" style="font-size:17px">${icon("users",18)}发现圈子</h2></div>
+    <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+      ${circles.map(c=>`<div style="display:flex;gap:12px;align-items:center;padding:14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2)">
+        <span style="width:42px;height:42px;border-radius:14px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--primary)">${icon(c.species==="dog"?"dog":c.species==="cat"?"cat":"users",19)}</span>
+        <div style="flex:1;min-width:0"><b style="font-size:14px">${esc(c.name)}</b>
+          <div style="font-size:12px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.desc)}</div></div>
+        <button class="btn ${S.joined.includes(c.id)?"btn-ghost":"btn-primary"} btn-sm" onclick="joinCircle('${c.id}')">${S.joined.includes(c.id)?"已加入":"加入"}</button>
+      </div>`).join("")}
+    </div>
+  </section>`;
+}
+function setCommTab(t){ COMM_TAB=t; viewCommunity(); }
+function setCircle(id){ COMM_CIRCLE=id; viewCommunity(); }
+async function joinCircle(id){
+  const {joined}=await api.toggleCircle(id);
+  toast(joined?"已加入圈子":"已退出圈子","users");
+  refresh();
+}
+/* ---------- 帖子详情 Modal（会员帖锁） ---------- */
+async function openPost(id){
+  const {post,comments}=await api.getPost(id);
+  if(!post) return;
+  const locked=post.memberOnly&&!S.isPro();
+  const m=openModal(`${modalHead(esc(post.circle))}
+  <div class="modal-body">
+    <div style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text-sub);margin-bottom:10px">
+      <b style="color:var(--text)">${esc(post.author)}</b><span>${esc(post.pet)}</span><span>·</span><span>${esc(post.time)}</span>
+      ${post.essence?`<span style="color:var(--accent);display:inline-flex;align-items:center;gap:3px;font-weight:600">${icon("star",13)}精华</span>`:""}
+    </div>
+    <h2 style="font-size:22px;line-height:1.4;margin-bottom:12px">${esc(post.title)}</h2>
+    ${post.img?`<img src="${post.img}" alt="" style="width:100%;height:220px;object-fit:cover;border-radius:var(--r-md);margin-bottom:14px">`:""}
+    ${locked?`
+      <div style="text-align:center;padding:34px 20px;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-md)">
+        <div style="color:var(--accent);display:flex;justify-content:center;margin-bottom:10px">${icon("crown",34)}</div>
+        <b style="font-size:16px">本帖为会员专享内容</b>
+        <p style="font-size:13px;color:var(--text-sub);margin:8px 0 16px">开通 Pro 会员，解锁全部深度测评与专栏</p>
+        <button class="btn btn-gold btn-md" onclick="closeModal();go('membership')">开通会员 ${icon("arrow-right",14)}</button>
+      </div>`:`
+      <p style="font-size:14px;line-height:1.9;color:#37443B">${esc(post.excerpt)}</p>
+      <p style="font-size:14px;line-height:1.9;color:#37443B;margin-top:10px">（此处为正文摘要展示，完整内容与图片集将在正式版中呈现。欢迎在评论区交流你的经验。）</p>
+      <div style="display:flex;gap:16px;margin:18px 0;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text-sub);font-size:13px">
+        <span style="display:inline-flex;align-items:center;gap:5px">${icon("heart",15)}${post.likes} 赞</span>
+        <span style="display:inline-flex;align-items:center;gap:5px">${icon("eye",15)}${post.views} 阅读</span>
+        <span style="display:inline-flex;align-items:center;gap:5px">${icon("message-circle",15)}${post.comments} 评论</span>
+      </div>
+      <h3 style="font-size:15px;margin-bottom:10px">评论 ${comments.length?`（${comments.length}）`:""}</h3>
+      <div id="comment-list">
+        ${comments.length?comments.map(c=>`
+          <div style="padding:10px 0;border-bottom:1px dashed var(--border)">
+            <b style="font-size:13px">${esc(c.author)}</b><span style="font-size:12px;color:var(--text-sub)"> · ${esc(c.time)}</span>
+            <p style="font-size:13px;margin-top:3px">${esc(c.text)}</p>
+          </div>`).join(""):`<div class="empty" style="padding:20px">还没有评论，来说两句</div>`}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <input id="comment-input" placeholder="友善交流，分享你的经验…" maxlength="100"
+          style="flex:1;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:var(--r-sm);outline:none"
+          onkeydown="if(event.key==='Enter')submitComment('${post.id}')">
+        <button class="btn btn-primary btn-md" onclick="submitComment('${post.id}')">${icon("send",15)}发送</button>
+      </div>`}
+  </div>`,true);
+  if(!locked) m.querySelector("#comment-input").focus();
+}
+async function submitComment(postId){
+  const inp=$("#comment-input"), text=inp.value.trim();
+  if(!text){ inp.style.borderColor="var(--danger)"; inp.focus(); return; }
+  await api.addComment(postId,text);
+  toast("评论已发布","message-circle");
+  closeModal(); openPost(postId);
+}
+/* ---------- 视图 4：会员中心 ---------- */
+function viewMembership(){
+  const pro=S.isPro();
+  const cur=DB.plans.find(p=>p.id===S.plan)||DB.plans[0];
+  const rows=[
+    ["健康档案数量","1 只","不限","不限"],
+    ["健康报告","每月 1 次","无限 + 趋势解读","无限 + 趋势解读"],
+    ["会员专享内容","—","✓","✓"],
+    ["商城会员价","—","低至 8 折","低至 8 折"],
+    ["专属身份标识","—","✓","✓"],
+    ["年度体检立减","—","—","减 ¥80"],
+    ["线下活动名额","—","—","免费优先"]
+  ];
+  $("#view").innerHTML=`
+  <div class="view-head reveal">
+    <div><div class="kicker">MEMBERSHIP</div><h1 class="view-title">会员中心</h1>
+      <p class="view-sub">更深的健康洞察，更省的甄选价格</p></div>
+  </div>
+  <section class="card reveal" style="padding:24px;border-radius:var(--r-lg);display:flex;gap:18px;align-items:center;flex-wrap:wrap;animation-delay:50ms;${pro?"border-color:rgba(192,122,46,.4);background:linear-gradient(120deg,rgba(192,122,46,.08),rgba(192,122,46,.02))":""}">
+    <div class="avatar" style="width:56px;height:56px;font-size:22px">${esc((S.user?S.user.name:DB.user.name)[0])}</div>
+    <div style="flex:1;min-width:200px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <b style="font-size:18px;font-family:var(--font-display)">${esc(S.user?S.user.name:DB.user.name)}</b>
+        ${pro?`<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px">${icon("crown",12)}${esc(cur.name)}</span>`
+        :`<span style="background:var(--surface-2);border:1px solid var(--border);color:var(--text-sub);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px">漫游者</span>`}
+      </div>
+      <p style="font-size:13px;color:var(--text-sub);margin-top:4px">
+        ${pro?`会员生效中 · ${S.plan==="pro_y"?"年卡":"月卡"} · 已陪伴你 2 只毛孩子`:"当前为免费版 · 升级解锁全部功能"}</p>
+    </div>
+    ${pro?`<div style="text-align:right"><div style="font-size:12px;color:var(--text-sub)">本月已省</div><div style="font-size:26px;font-weight:700;color:var(--accent);font-family:var(--font-display)">¥ 96.00</div></div>`:""}
+  </section>
+  <div class="grid reveal" style="grid-template-columns:repeat(3,1fr);margin-top:20px;animation-delay:100ms">
+    ${DB.plans.map((p,i)=>{
+      const active=S.plan===p.id, hl=p.id==="pro_y";
+      return `<div class="card hoverable" style="padding:26px;position:relative;${hl?"border:2px solid var(--accent);box-shadow:var(--sh-md)":""}">
+        ${hl?`<span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:999px">最受欢迎</span>`:""}
+        <div style="display:flex;gap:8px;align-items:center;color:${hl?"var(--accent)":"var(--text-sub)"};font-weight:700">${icon(p.id==="free"?"paw-print":"crown",18)}${esc(p.name)}</div>
+        <div style="margin:14px 0 4px"><span style="font-size:36px;font-weight:700;font-family:var(--font-display)">${p.price?money(p.price):"免费"}</span>
+          <span style="color:var(--text-sub);font-size:13px"> / ${esc(p.period)}</span></div>
+        ${p.save?`<div style="font-size:12px;color:var(--accent);font-weight:600">${esc(p.save)} · 约 ¥14/月</div>`:'<div style="font-size:12px;color:var(--text-sub)">&nbsp;</div>'}
+        <ul style="list-style:none;margin:16px 0 20px;display:flex;flex-direction:column;gap:9px">
+          ${p.features.map(f=>`<li style="display:flex;gap:8px;font-size:13px;align-items:flex-start"><span style="color:var(--success);margin-top:2px">${icon("check-circle",14)}</span>${esc(f)}</li>`).join("")}
+        </ul>
+        ${active?`<button class="btn btn-ghost btn-md" style="width:100%" disabled>当前方案</button>`
+          :p.id==="free"?`<button class="btn btn-ghost btn-md" style="width:100%" disabled>默认方案</button>`
+          :`<button class="btn btn-gold btn-md" style="width:100%" onclick="openSubscribe('${p.id}')">${pro?"切换为"+esc(p.name):"开通 "+esc(p.name)}</button>`}
+      </div>`}).join("")}
+  </div>
+  <section class="card reveal" style="padding:24px;margin-top:20px;animation-delay:140ms;overflow-x:auto">
+    <h2 class="section-title" style="margin-bottom:14px">${icon("shield-check",20)}权益对比</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px">
+      <thead><tr style="text-align:left;color:var(--text-sub)">
+        <th style="padding:10px 12px;font-weight:600">权益项</th>
+        <th style="padding:10px 12px;font-weight:600">漫游者</th>
+        <th style="padding:10px 12px;font-weight:600;color:var(--accent)">Pro 月卡</th>
+        <th style="padding:10px 12px;font-weight:600;color:var(--accent)">Pro 年卡</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr style="border-top:1px solid var(--border)">
+        <td style="padding:11px 12px;font-weight:600">${r[0]}</td>
+        ${r.slice(1).map(c=>`<td style="padding:11px 12px;color:${c==="—"?"#C4BCAB":"var(--text)"}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>
+  </section>`;
+}
+function openSubscribe(planId){
+  const p=DB.plans.find(x=>x.id===planId);
+  openModal(`${modalHead("确认开通")}
+  <div class="modal-body" style="text-align:center">
+    <div style="color:var(--accent);display:flex;justify-content:center;margin-bottom:8px">${icon("crown",40)}</div>
+    <h3 style="font-size:20px">${esc(p.name)}</h3>
+    <p style="color:var(--text-sub);font-size:13px;margin:6px 0 18px">支付 <b style="color:var(--accent);font-size:18px">${money(p.price)}</b> · ${esc(p.period)}${p.save?" · "+esc(p.save):""}</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost btn-md" onclick="closeModal()">再想想</button>
+      <button class="btn btn-gold btn-lg" id="pay-btn" onclick="doSubscribe('${p.id}')">立即支付 ${icon("zap",15)}</button>
+    </div>
+  </div>`);
+}
+async function doSubscribe(planId){
+  const btn=$("#pay-btn"); btn.disabled=true; btn.innerHTML="支付中…";
+  await api.subscribe(planId);
+  const m=openModal(`<div class="modal-body" style="text-align:center;padding:44px 30px">
+    <div style="color:var(--success);display:flex;justify-content:center;margin-bottom:12px">${icon("badge-check",52)}</div>
+    <h3 style="font-size:22px;margin-bottom:8px">开通成功，欢迎登岛</h3>
+    <p style="color:var(--text-sub);font-size:13px;margin-bottom:22px">全部会员权益已生效，商城会员价同步解锁</p>
+    <button class="btn btn-gold btn-md" onclick="closeModal();refresh()">开始体验 ${icon("arrow-right",14)}</button>
+  </div>`);
+  updateCartBadge();
+}
+/* ---------- 视图 5：甄选商城 ---------- */
+let SHOP_CAT="全部";
+async function viewShop(){
+  const view=$("#view");
+  view.innerHTML=`<div class="skeleton" style="height:100px;border-radius:var(--r-lg)"></div><div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px">${'<div class="skeleton" style="height:300px"></div>'.repeat(8)}</div>`;
+  const list=await api.getProducts(SHOP_CAT);
+  const cats=["全部","主粮","零食","保健","智能","用品","服务"];
+  const pro=S.isPro();
+  view.innerHTML=`
+  <div class="view-head reveal">
+    <div><div class="kicker">SELECTED STORE</div><h1 class="view-title">甄选商城</h1>
+      <p class="view-sub">每一件都经过岛民真实测评 ${pro?'· <b style="color:var(--accent)">会员价生效中</b>':""}</p></div>
+    <button class="btn btn-primary btn-md" onclick="openCart()">${icon("shopping-cart",16)}购物车（${S.cart.reduce((s,c)=>s+c.qty,0)}）</button>
+  </div>
+  <div class="reveal" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;animation-delay:60ms">
+    ${cats.map(c=>`<button class="chip ${SHOP_CAT===c?"active":""}" onclick="setShopCat('${c}')">${c}</button>`).join("")}
+  </div>
+  ${list.length?`<div class="grid" style="grid-template-columns:repeat(4,1fr)">
+    ${list.map((p,i)=>`
+    <article class="card hoverable reveal" style="overflow:hidden;animation-delay:${i*60}ms;cursor:pointer" onclick="openProduct('${p.id}')">
+      <div style="position:relative">
+        <img src="${p.img}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:170px;object-fit:cover">
+        <span style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,.92);backdrop-filter:blur(4px);font-size:11px;font-weight:700;color:var(--primary);padding:3px 9px;border-radius:999px">${esc(p.tag)}</span>
+      </div>
+      <div style="padding:14px">
+        <div style="font-size:11px;color:var(--text-sub);letter-spacing:.1em">${esc(p.cat)}</div>
+        <h3 style="font-size:14px;line-height:1.5;height:42px;overflow:hidden;margin:4px 0 8px;font-family:var(--font-body);font-weight:600">${esc(p.name)}</h3>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <b style="font-size:18px;color:${pro?"var(--accent)":"var(--text)"};font-family:var(--font-display)">${money(pro?p.member:p.price)}</b>
+          ${pro?`<s style="font-size:12px;color:var(--text-sub)">${money(p.price)}</s>`
+          :`<span style="font-size:12px;color:var(--accent);display:inline-flex;align-items:center;gap:2px">${icon("crown",12)}会员 ${money(p.member)}</span>`}
+        </div>
+        <button class="btn ${pro?"btn-gold":"btn-primary"} btn-sm" style="width:100%;margin-top:10px" onclick="event.stopPropagation();addCart('${p.id}')">${icon("shopping-cart",14)}加入购物车</button>
+      </div>
+    </article>`).join("")}
+  </div>`:`<div class="card empty">${icon("shopping-bag",36)}<br>该分类暂无商品</div>`}`;
+}
+function setShopCat(c){ SHOP_CAT=c; viewShop(); }
+async function addCart(id){
+  await api.addToCart(id,1);
+  updateCartBadge();
+  toast("已加入购物车","shopping-cart");
+}
+function openProduct(id){
+  const p=DB.products.find(x=>x.id===id); if(!p) return;
+  const pro=S.isPro();
+  openModal(`${modalHead("商品详情")}
+  <div class="modal-body">
+    <img src="${p.img}" alt="${esc(p.name)}" style="width:100%;height:240px;object-fit:cover;border-radius:var(--r-md)">
+    <div style="display:flex;gap:8px;align-items:center;margin-top:14px">
+      <span class="chip" style="height:24px;font-size:12px;cursor:default">${esc(p.cat)}</span>
+      <span class="chip" style="height:24px;font-size:12px;cursor:default">${esc(p.tag)}</span>
+    </div>
+    <h3 style="font-size:20px;margin:10px 0 6px">${esc(p.name)}</h3>
+    <p style="color:var(--text-sub);font-size:13px;line-height:1.8">${esc(p.desc)}</p>
+    <div style="display:flex;align-items:baseline;gap:10px;margin:16px 0">
+      <b style="font-size:28px;color:${pro?"var(--accent)":"var(--text)"};font-family:var(--font-display)">${money(pro?p.member:p.price)}</b>
+      ${pro?`<s style="color:var(--text-sub)">${money(p.price)}</s><span style="font-size:12px;color:var(--accent);font-weight:600">已享会员价</span>`
+      :`<span style="font-size:13px;color:var(--accent);display:inline-flex;align-items:center;gap:4px">${icon("crown",14)}会员价 ${money(p.member)}，开通立省 ${money(p.price-p.member)}</span>`}
+    </div>
+    <div style="display:flex;gap:10px">
+      ${pro?"":`<button class="btn btn-ghost btn-md" onclick="closeModal();go('membership')">开通会员享低价</button>`}
+      <button class="btn ${pro?"btn-gold":"btn-primary"} btn-lg" style="flex:1" onclick="addCart('${p.id}');closeModal()">${icon("shopping-cart",16)}加入购物车</button>
+    </div>
+  </div>`);
+}
+/* ---------- 购物车 Drawer + 结算 ---------- */
+function openCart(){
+  renderCart();
+}
+function renderCart(){
+  const pro=S.isPro();
+  const items=S.cart.map(c=>({...c,p:DB.products.find(x=>x.id===c.id)})).filter(c=>c.p);
+  const total=items.reduce((s,c)=>s+(pro?c.p.member:c.p.price)*c.qty,0);
+  const saved=items.reduce((s,c)=>s+(c.p.price-c.p.member)*c.qty,0);
+  openDrawer(`
+    <div class="drawer-head"><h3 style="font-size:17px">${icon("shopping-cart",18)} 购物车（${items.reduce((s,c)=>s+c.qty,0)}）</h3>
+      <button class="icon-btn" onclick="closeDrawer()">${icon("x",18)}</button></div>
+    <div class="drawer-body">
+      ${items.length?items.map(c=>`
+        <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--border)">
+          <img src="${c.p.img}" alt="" style="width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;line-height:1.4">${esc(c.p.name)}</div>
+            <div style="font-size:13px;color:var(--accent);font-weight:700;margin-top:4px">${money(pro?c.p.member:c.p.price)}
+              ${pro?`<s style="font-size:11px;color:var(--text-sub);font-weight:400;margin-left:4px">${money(c.p.price)}</s>`:""}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <button class="icon-btn" style="width:26px;height:26px;border:1px solid var(--border);border-radius:8px" onclick="cartQty('${c.id}',-1)">${icon("minus",13)}</button>
+              <b style="font-size:13px;min-width:18px;text-align:center">${c.qty}</b>
+              <button class="icon-btn" style="width:26px;height:26px;border:1px solid var(--border);border-radius:8px" onclick="cartQty('${c.id}',1)">${icon("plus",13)}</button>
+              <button class="btn btn-danger-ghost btn-sm" style="margin-left:auto;height:28px;padding:0 10px" onclick="cartDel('${c.id}')">删除</button>
+            </div>
+          </div>
+        </div>`).join("")
+      :`<div class="empty">${icon("shopping-cart",36)}<br>购物车还是空的，去挑点好东西吧</div>`}
+    </div>
+    ${items.length?`<div class="drawer-foot">
+      ${pro?`<div style="font-size:12px;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:4px">${icon("crown",13)}会员价已为你节省 ${money(saved)}</div>`
+      :`<div style="font-size:12px;color:var(--text-sub);margin-bottom:6px">开通会员本单可省 <b style="color:var(--accent)">${money(saved)}</b> <a href="#/membership" onclick="closeDrawer()" style="color:var(--accent);font-weight:600">去开通 →</a></div>`}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:13px;color:var(--text-sub)">合计</span>
+        <b style="font-size:22px;font-family:var(--font-display)">${money(total)}</b>
+      </div>
+      <button class="btn ${pro?"btn-gold":"btn-primary"} btn-lg" style="width:100%" id="checkout-btn" onclick="doCheckout()">去结算 ${icon("arrow-right",15)}</button>
+    </div>`:""}`);
+}
+async function cartQty(id,d){
+  const it=S.cart.find(c=>c.id===id); if(!it) return;
+  it.qty+=d; if(it.qty<=0) S.cart=S.cart.filter(c=>c.id!==id);
+  S.save(); updateCartBadge(); renderCart();
+}
+function cartDel(id){ S.cart=S.cart.filter(c=>c.id!==id); S.save(); updateCartBadge(); renderCart(); toast("已移除商品"); }
+async function doCheckout(){
+  const btn=$("#checkout-btn"); btn.disabled=true; btn.innerHTML="结算中…";
+  const {orderNo}=await api.checkout();
+  updateCartBadge(); closeDrawer();
+  openModal(`<div class="modal-body" style="text-align:center;padding:44px 30px">
+    <div style="color:var(--success);display:flex;justify-content:center;margin-bottom:12px">${icon("badge-check",52)}</div>
+    <h3 style="font-size:22px;margin-bottom:8px">下单成功</h3>
+    <p style="color:var(--text-sub);font-size:13px;margin-bottom:6px">订单号 <b style="color:var(--text)">${orderNo}</b></p>
+    <p style="color:var(--text-sub);font-size:13px;margin-bottom:22px">仓库正在打包，预计 48 小时内送达</p>
+    <button class="btn btn-primary btn-md" onclick="closeModal();refresh()">继续逛逛 ${icon("arrow-right",14)}</button>
+  </div>`);
+}
+/* ---------- 路由 & 初始化 ---------- */
+const NAV=[
+  {key:"home",label:"首页",icon:"paw-print"},
+  {key:"health",label:"健康档案",icon:"heart-pulse"},
+  {key:"community",label:"圈层社区",icon:"users"},
+  {key:"membership",label:"会员中心",icon:"crown"},
+  {key:"shop",label:"甄选商城",icon:"shopping-bag"}
+];
+const VIEWS={home:viewHome,health:viewHealth,community:viewCommunity,membership:viewMembership,shop:viewShop};
+function go(route){ location.hash="#/"+route; }
+function refresh(){ route(location.hash.replace("#/","")||"home",true); }
+function route(key,force){
+  if(!VIEWS[key]) key="home";
+  $$(".nav-item").forEach(n=>n.classList.toggle("active",n.dataset.nav===key));
+  $$(".tab-item").forEach(n=>n.classList.toggle("active",n.dataset.nav===key));
+  window.scrollTo({top:0});
+  trackPV();
+  VIEWS[key]();
+}
+function init(){
+  // 品牌 logo
+  $("#brand-logo").innerHTML=icon("paw-print",20);
+  // 桌面胶囊导航 + 移动 Tab Bar（同一数据源渲染一次）
+  $("#mainnav").innerHTML=NAV.map(n=>`<a class="nav-item" data-nav="${n.key}" href="#/${n.key}">${icon(n.icon,15)}${n.label}</a>`).join("");
+  $("#tabbar").innerHTML=NAV.map(n=>`<a class="tab-item" data-nav="${n.key}" href="#/${n.key}">${icon(n.icon,20)}<span>${n.label}</span></a>`).join("");
+  // 顶栏按钮
+  $("#top-search").innerHTML=icon("search",18);
+  $("#top-bell").insertAdjacentHTML("afterbegin",icon("bell",18));
+  $("#top-cart").insertAdjacentHTML("afterbegin",icon("shopping-bag",18));
+  $("#top-search").onclick=()=>toast("全站搜索即将上线","search");
+  $("#top-bell").onclick=()=>toast("你有 2 条新提醒：年糕的指甲护理、可可的软骨素补货","bell");
+  $("#top-cart").onclick=openCart;
+  $("#top-quick").onclick=openRecordModal;
+  renderAuthArea();
+  if(API_BASE&&S.token){ api.me().then(r=>{ if(r.user)S.user=r.user; if(r.plan)S.plan=r.plan; if(r.petId)S.activePet=r.petId; S.save(); renderAuthArea(); }).catch(()=>{}); }
+  updateCartBadge();
+  window.addEventListener("hashchange",()=>{ closeModal(); closeDrawer(); route(location.hash.replace("#/","")); });
+  if(!location.hash) location.hash="#/home";
+  route(location.hash.replace("#/",""));
+}
+document.addEventListener("DOMContentLoaded",init);
+</script>
+</body>
+</html>

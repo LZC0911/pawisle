@@ -1,0 +1,19 @@
+# 绒屿 PAWISLE API · Cloudflare Workers + D1
+#
+# 部署步骤：
+#   1) npm i -g wrangler && wrangler login
+#   2) wrangler d1 create pawisle        → 把输出的 database_id 填到下面
+#   3) wrangler deploy                   → 首次请求自动建表 + 写入种子数据
+#   4) 把 pawisle/index.html 中 API_BASE 改为部署后的地址
+
+name = "pawisle-api"
+main = "src/index.js"
+compatibility_date = "2024-09-25"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pawisle"
+database_id = "REPLACE_WITH_YOUR_D1_ID"
+
+# 生产环境务必设置 JWT 密钥（不设置则使用代码内置开发密钥，仅限调试）：
+#   wrangler secret put JWT_SECRET
