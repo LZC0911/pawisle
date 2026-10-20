@@ -1,5 +1,5 @@
 # 绒屿 PAWISLE
-
+demo测试页：https://lzc0911.github.io/pawisle/
 面向中文宠物主的兴趣圈层工具社区 —— 以**宠物健康档案**为核心，叠加圈子社区、会员服务与精选电商。
 
 单页高保真原型 + Cloudflare Workers/D1 真实后端，免备案即可上线。
